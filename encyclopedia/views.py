@@ -96,59 +96,59 @@ def markdown_2_html(content):
     bold = re.compile(r"\_\_([^-\s].*?[^-\s])\_\_|\*{2}([^-\s].*?[^-\s])\*{2}")
     lines = content.split('\n')
     links = re.compile(r"\[(.*?)\]\((.*?)\)")
-    ullists = re.compile(r"\*\s\w+")
+    ullists = re.compile(r"(\*\s\w+)|(-\s\w+)")
     ulist = list()
     list_midst = False
     for l, line in enumerate(lines):
         line = bold.sub(r'<b>\1\2</b>', line)
         line = links.sub(r'<a href="\2">\1</a>', line)
+        lines[l] = line
         h1 = header.search(line)
         ul = ullists.search(line)
-        if list_midst:
-            if ul:
-                ulist.append(line)
-                del line
-            else:
-                line = mark_2_html_matcher(line, h1)
-                list_midst = False
-                for item in ulist:
-                    kevin = f'<li>{str(item)}</li>'
-                    item = f'<li>{str(item)}</li>'
-                    print(kevin)
+        if ul:
+            if not list_midst:
                 ulist.insert(0, '<ul>')
+                line = line[2:]
+                line = f'<li>{line}</li>'
+                ulist.append(line)
+                lines[l] = ''
+                list_midst = True 
+                ul = None
+            else:
+                line = line[2:]
+                line = f'<li>{line}</li>'
+                ulist.append(line)
+                lines[l] = ''
+                ul = None
+        else:
+            if ulist:
                 ulist.append('</ul>')
                 ulist = ''.join(ulist)
-                lines.append(ulist)
+                lines[l-1] = ulist
+                list_midst = False
                 ulist = []
-        else:
-            if h1:
-                n = len(h1.group())
-                line = header.sub('', line)
-                line = f"<h{n}>"+ line + f"</h{n}>"
-            else:
-                if ul:
-                    ulist.append(line)
-                    del line
-                    list_midst = True
+                ul = None
+                if h1:
+                   lines[l] = mark_2_html_matcher(line, h1)
                 else:
                     line = f"<p>{line}</p>"
-     
+            elif h1:
+                lines[l] = mark_2_html_matcher(line, h1)
+            else:
+                line = f"<p>{line}</p>"
+        ul = None
     content = ''.join(lines)
-    print(ulist)
+    print(content)
     return content
 
 def mark_2_html_matcher(line, h1):
     header = re.compile(r'#{1,6}')
-    if h1:
-        n = len(h1.group())
-        line = header.sub('', line)
-        line = f"<h{n}>"+ line + f"</h{n}>"
-        return line
-    else:
-        line = f"<p>{line}</p>"
-        return line
+    n = len(h1.group())
+    line = header.sub('', line)
+    line = f"<h{n}>"+ line + f"</h{n}>"
+    return line
 # headings,* 
 # boldface text, *
-# unordered lists, 
+# unordered lists, *
 # links, *
 # paragraphs *
