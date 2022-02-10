@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block body %}
-    {{ entry }}
+    {{ entry|safe }}
     </br>
     <button><a href="{% url 'encyclopedia:edit' title %}">Edit Entry</a></button>
 {% endblock %}  
